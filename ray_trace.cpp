@@ -1,7 +1,10 @@
+#include <random>
 #include <iostream>
+#include "float.h"
+
 #include "sphere.hpp"
 #include "collidable_list.hpp"
-#include "float.h"
+#include "camera.hpp"
 
 vec3 unit_vector(const vec3 &v1) {
   return v1 / v1.length();
@@ -20,15 +23,18 @@ vec3 colour(const ray &r, collidable_list* world) {
 }
 
 int main(int argc, char** argv) {
-  int image_width = 800;
-  int image_height = 400;
+  int image_width = 1600;
+  int image_height = 800;
+
+  std::mt19937_64 rng;
+  uint64_t timeSeed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  std::seed_seq ss = {uint32_t(timeSeed & 0xffffffff), uint32_t(timeSeed>>32)};
+  rng.seed(ss);
+  std::uniform_real_distribution<double> unif(0, 1);
 
   std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";
 
-  vec3 lower_left_corner(-2.0, -1.0, -1.0);
-  vec3 horizontal(4.0, 0.0, 0.0);
-  vec3 vertical(0.0, 2.0, 0.0);
-  vec3 origin(0.0, 0.0, 0.0);
+  camera cam;
 
   collidable* list[2];
   list[0] = new sphere(vec3(0, 0, -1), 0.5);
@@ -37,10 +43,10 @@ int main(int argc, char** argv) {
 
   for (int column = image_height; column >= 0; column--) {
     for (int row = 0; row < image_width; row++) {
-      float u = float(row) / float(image_width);
-      float v = float(column) / float(image_height);
+      float u = float(row + unif(rng)) / float(image_width);
+      float v = float(column + unif(rng)) / float(image_height);
 
-      ray r(origin, lower_left_corner + horizontal*u + vertical*v);
+      ray r = cam.get_ray(u, v);
       vec3 col = colour(r, &listx);
 
       int ir =  int(255.99*col.r());
