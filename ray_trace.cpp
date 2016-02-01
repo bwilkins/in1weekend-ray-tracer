@@ -1,19 +1,28 @@
-#include <random>
 #include <iostream>
 #include "float.h"
 
 #include "sphere.hpp"
 #include "collidable_list.hpp"
 #include "camera.hpp"
+#include "random.hpp"
 
 vec3 unit_vector(const vec3 &v1) {
   return v1 / v1.length();
 }
 
+vec3 random_in_unit_sphere() {
+  vec3 p;
+  do {
+    p = 2*vec3(brandom(), brandom(), brandom()) - vec3(1, 1, 1);
+  } while(dot(p,p) >= 1.0);
+  return p;
+}
+
 vec3 colour(const ray &r, collidable_list* world) {
   collision_record rec;
   if (world->hit(r, 0.0, MAXFLOAT, rec)) {
-    return 0.5*vec3(rec.normal.x() + 1, rec.normal.y() + 1, rec.normal.z() + 1);
+    vec3 target = rec.p + rec.normal + random_in_unit_sphere();
+    return 0.5*colour(ray(rec.p, target - rec.p), world);
   }
   else {
     vec3 unit_direction = unit_vector(r.direction());
@@ -23,14 +32,9 @@ vec3 colour(const ray &r, collidable_list* world) {
 }
 
 int main(int argc, char** argv) {
-  int image_width = 1600;
-  int image_height = 800;
-
-  std::mt19937_64 rng;
-  uint64_t timeSeed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-  std::seed_seq ss = {uint32_t(timeSeed & 0xffffffff), uint32_t(timeSeed>>32)};
-  rng.seed(ss);
-  std::uniform_real_distribution<double> unif(0, 1);
+  int image_width   = 800;
+  int image_height  = 400;
+  int samples       = 10;
 
   std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";
 
@@ -43,12 +47,16 @@ int main(int argc, char** argv) {
 
   for (int column = image_height; column >= 0; column--) {
     for (int row = 0; row < image_width; row++) {
-      float u = float(row + unif(rng)) / float(image_width);
-      float v = float(column + unif(rng)) / float(image_height);
+      vec3 col(0, 0, 0);
+      for (int s = 0; s < samples; s++) {
+        float u = float(row + unif(rng)) / float(image_width);
+        float v = float(column + unif(rng)) / float(image_height);
 
-      ray r = cam.get_ray(u, v);
-      vec3 col = colour(r, &listx);
-
+        ray r = cam.get_ray(u, v);
+        col += colour(r, &listx);
+      }
+      col /= float(samples);
+      col = vec3(sqrt(col[0]), sqrt(col[1]), sqrt(col[2]));
       int ir =  int(255.99*col.r());
       int ig =  int(255.99*col.g());
       int ib =  int(255.99*col.b());
