@@ -3,8 +3,8 @@ CXXFLAGS=-std=c++11 -stdlib=libc++
 .PHONY: all
 all: open
 
-ray_trace: ray_trace.cpp
-	$(CXX) $(CXXFLAGS) $< -o $@
+ray_trace: ray_trace.cpp *.hpp
+	$(CXX) $(CXXFLAGS) ray_trace.cpp -o $@
 
 .PHONY: render
 render: ray_trace.ppm

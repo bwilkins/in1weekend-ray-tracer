@@ -3,14 +3,16 @@
 #include "vec3.hpp"
 #include "ray.hpp"
 #include "collidable.hpp"
+#include "material.hpp"
 
 class sphere: public collidable {
   vec3 center;
   float radius;
+  material* mat_ptr;
 
   public:
     sphere() {};
-    sphere(vec3 cen, float r) : center(cen), radius(r) {};
+    sphere(vec3 cen, float r, material* mat) : center(cen), radius(r), mat_ptr(mat) {};
     virtual bool hit(const ray& r, float t_min, float t_max, collision_record& rec) const;
 };
 
@@ -24,6 +26,7 @@ bool sphere::hit(const ray& r, float t_min, float t_max, collision_record& rec) 
   if (discriminant > 0) {
     float temp = (-b - sqrt(discriminant))/a;
     if (temp < t_max && temp > t_min) {
+      rec.mat_ptr = mat_ptr;
       rec.t = temp;
       rec.p = r.point_at_parameter(rec.t);
       rec.normal = (rec.p - center) / radius;
@@ -32,6 +35,7 @@ bool sphere::hit(const ray& r, float t_min, float t_max, collision_record& rec) 
 
     temp = (-b + sqrt(discriminant))/a;
     if (temp < t_max && temp > t_min) {
+      rec.mat_ptr = mat_ptr;
       rec.t = temp;
       rec.p = r.point_at_parameter(rec.t);
       rec.normal = (rec.p - center) / radius;

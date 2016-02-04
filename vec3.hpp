@@ -37,7 +37,7 @@ public:
 
   float length() const { return sqrt(e[0]*e[0] + e[1]*e[1] + e[2]*e[2]); }
   float squared_length() const { return e[0]*e[0] + e[1]*e[1] + e[2]*e[2]; }
-  void make_unit_vector();
+  vec3 unit() const { return vec3(e[0], e[1], e[2]) / length(); }
 };
 
 float dot(const vec3& v1, const vec3& v2) {
